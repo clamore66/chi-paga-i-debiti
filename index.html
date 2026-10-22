@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi paga i debiti? · Simulatore delle società</title>
+<style>
+  :root{
+    --bg:#f4f1e9;
+    --paper:#fffdf8;
+    --ink:#1d2530;
+    --muted:#68727e;
+    --line:#e3ddcf;
+    --line-strong:#cfc7b6;
+    --teal:#0e6b62;
+    --teal-soft:#e3f0ed;
+    --blue:#2b6a97;
+    --blue-soft:#e6eff6;
+    --amber:#b9761a;
+    --amber-soft:#f8edda;
+    --red:#ab3a3a;
+    --red-soft:#f8e7e4;
+    --shadow:0 1px 2px rgba(29,37,48,.05),0 12px 32px -20px rgba(29,37,48,.45);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    color:var(--ink);
+    background:var(--bg);
+    background-image:radial-gradient(900px 500px at 8% -8%,#eaf1ec 0,rgba(234,241,236,0) 65%);
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 22px 46px}
+
+  /* ---------- Testata ---------- */
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:10px 0 24px;flex-wrap:wrap}
+  .kicker{margin:0 0 8px;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--teal)}
+  h1{
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    font-weight:600;font-size:clamp(2.1rem,4.6vw,3.1rem);line-height:1.05;
+    margin:0;letter-spacing:-.015em;
+  }
+  .sub{margin:12px 0 0;max-width:62ch;color:var(--muted);font-size:1.02rem}
+  .hero .btn-ghost{margin-top:8px;flex:none}
+
+  /* ---------- Bottoni e campi ---------- */
+  .btn-ghost{
+    font:inherit;font-size:.82rem;font-weight:600;color:var(--ink);
+    background:#fff;border:1px solid var(--line-strong);border-radius:10px;
+    padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s;
+  }
+  .btn-ghost:hover{background:#faf6ec;border-color:#bdb4a1}
+  .btn-ghost:disabled{opacity:.45;cursor:not-allowed}
+  .btn-ghost.sm{padding:3px 10px;font-size:.74rem}
+  .wide{width:100%}
+
+  .layout{display:grid;grid-template-columns:352px minmax(0,1fr);gap:26px;align-items:start}
+  .panel{
+    position:sticky;top:20px;
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .field{margin-bottom:18px}
+  .field > label,.field-label{display:block;font-size:.82rem;font-weight:700;margin-bottom:6px}
+  .field-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .field-head label,.field-head .field-label{margin:0}
+  output{
+    font-size:.78rem;font-weight:700;color:var(--teal);background:var(--teal-soft);
+    padding:2px 9px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  input[type=range]{width:100%;margin:6px 0 0;accent-color:var(--teal);cursor:pointer}
+  select{
+    width:100%;font:inherit;font-size:.88rem;padding:9px 10px;border-radius:10px;
+    border:1px solid var(--line-strong);background:#fff;color:var(--ink);cursor:pointer;
+  }
+  select:disabled{opacity:.5;cursor:not-allowed}
+  .hint{margin:6px 0 0;font-size:.76rem;line-height:1.45;color:var(--muted)}
+  select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* ---------- Editor soci ---------- */
+  .p-row{background:#faf7ef;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+  .p-line{display:flex;align-items:center;gap:8px}
+  .p-line + .p-line{margin-top:6px}
+  .p-name{
+    flex:1;min-width:0;border:none;border-bottom:1px dashed transparent;background:transparent;
+    font:inherit;font-weight:600;color:var(--ink);padding:2px 0;border-radius:0;
+  }
+  .p-name:focus{outline:none;border-bottom-color:var(--line-strong)}
+  .p-del{
+    flex:none;width:24px;height:24px;line-height:1;font-size:14px;border-radius:50%;
+    border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;
+  }
+  .p-del:hover{background:var(--red-soft);color:var(--red);border-color:#e7c3be}
+  .chip{
+    font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px;white-space:nowrap;
+  }
+  .chip-ill{background:var(--amber-soft);color:#8a5a10}
+  .chip-acc{background:var(--blue-soft);color:#1f5278}
+  .chip-lim{background:var(--teal-soft);color:#0b534c}
+  .money{
+    display:inline-flex;align-items:center;gap:4px;margin-left:auto;
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:2px 8px 2px 6px;
+    font-size:.8rem;color:var(--muted);
+  }
+  .money input{
+    width:78px;border:none;background:transparent;font:inherit;font-weight:600;
+    color:var(--ink);text-align:right;padding:2px 0;outline:none;
+  }
+  .money input::-webkit-outer-spin-button,.money input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .money input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+  /* ---------- Risultati ---------- */
+  .results{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .case{
+    margin:0;background:#edf3ee;border:1px solid #d8e5dd;border-radius:12px;
+    padding:10px 14px;font-size:.9rem;color:#2b534c;
+  }
+  .case strong{
+    display:inline-block;margin-right:8px;font-size:.66rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--teal);
+  }
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .kpi{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+  .kpi span{display:block;font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:2px}
+  .kpi strong{font-size:1.06rem;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .kpi strong.danger{color:var(--red)}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 10px;font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:800}
+
+  .stack{
+    display:flex;height:54px;border-radius:12px;overflow:hidden;
+    background:#eae4d7;border:1px solid var(--line);
+  }
+  .seg{
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    transition:width .45s cubic-bezier(.4,0,.2,1);
+  }
+  .seg span{font-size:.75rem;font-weight:700;color:#fff;white-space:nowrap;padding:0 8px;text-shadow:0 1px 1px rgba(0,0,0,.18)}
+  .seg-company{background:linear-gradient(180deg,#3b7fa8,#2b6a97)}
+  .seg-partners{background:linear-gradient(180deg,#d08a2a,#b9761a)}
+  .seg-lost{background:repeating-linear-gradient(135deg,#b23b3b 0 10px,#9e3232 10px 20px)}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:.78rem;color:var(--muted)}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+  .dot-company{background:#2b6a97}.dot-partners{background:#b9761a}.dot-lost{background:#ab3a3a}
+
+  .verdict{
+    background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--teal);
+    border-radius:12px;padding:13px 16px;box-shadow:var(--shadow);
+  }
+  .verdict .eyebrow{margin:0;font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+  .verdict p.verdict-text{margin:5px 0 0;font-size:1rem}
+  .verdict.is-unlimited{border-left-color:var(--amber)}
+  .verdict.is-unlimited .eyebrow{color:#8a5a10}
+  .verdict.is-limited{border-left-color:var(--teal)}
+  .verdict.is-mixed{border-left-color:var(--blue)}
+  .verdict.is-mixed .eyebrow{color:#1f5278}
+
+  .p-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .p-card{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fffdf8;transition:background .3s,border-color .3s}
+  .p-card-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}
+  .p-card h3{margin:0;font-size:.95rem;font-weight:700}
+  .wbar{height:8px;border-radius:999px;background:#ece6d8;overflow:hidden;margin:10px 0}
+  .wbar i{display:block;height:100%;width:100%;border-radius:999px;background:var(--teal);transition:width .45s,background .45s}
+  .wbar i.spent{background:var(--amber)}
+  .p-card dl{display:grid;gap:3px;margin:0}
+  .p-card dl > div{display:flex;justify-content:space-between;gap:8px;font-size:.8rem}
+  .p-card dt{color:var(--muted)}
+  .p-card dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+  .p-card .p-note{margin:8px 0 0;font-size:.72rem;line-height:1.4;color:var(--muted);min-height:2.1em}
+  .p-card.is-hit{background:#fffaf1;border-color:#d9ab63}
+  .p-card.is-wiped{background:#fdf3f1;border-color:#e3b6ae}
+
+  details summary{cursor:pointer;font-weight:700;font-size:.86rem;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"\25B8";display:inline-block;margin-right:8px;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  .explain-body p{margin:10px 0 0;font-size:.9rem;max-width:72ch}
+  .explain-body p.fine{font-size:.78rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+  ol.experiments{margin:10px 0 0;padding-left:20px;font-size:.9rem}
+  ol.experiments li{margin:6px 0}
+  ol.experiments b{color:var(--teal)}
+
+  footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:.75rem;color:var(--muted)}
+
+  @media (max-width:1000px){
+    .layout{grid-template-columns:1fr}
+    .panel{position:static}
+  }
+  @media (max-width:720px){
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .wrap{padding:18px 14px 36px}
+    .p-cards{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+  @media print{
+    body{background:#fff}
+    .no-print,.panel{display:none !important}
+    .layout{display:block}
+    .card,.kpi,.verdict{box-shadow:none;border-color:#ccc;break-inside:avoid}
+    .wrap{max-width:none;padding:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <p class="kicker">Diritto · Le società · Terza IPSEOA</p>
+      <h1>Chi paga i debiti?</h1>
+      <p class="sub">Scegli la forma societaria, regola il debito e osserva chi rischia davvero il proprio patrimonio. Un simulatore per capire la differenza tra responsabilità limitata e illimitata.</p>
+    </div>
+    <button id="print" class="btn-ghost no-print" type="button">Stampa / PDF</button>
+  </header>
+
+  <div class="layout">
+
+    <!-- ============ PANNELLO IMPOSTAZIONI ============ -->
+    <aside class="panel no-print" aria-label="Impostazioni della simulazione">
+
+      <div class="field">
+        <label for="type">Forma societaria</label>
+        <select id="type"></select>
+        <p class="hint" id="typeHint"></p>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="debt">Debito verso i creditori</label>
+          <output id="debtOut" for="debt"></output>
+        </div>
+        <input type="range" id="debt" min="5000" max="500000" step="5000">
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="assets">Patrimonio della società</label>
+          <output id="assetsOut" for="assets"></output>
+        </div>
+        <input type="range" id="assets" min="0" max="300000" step="5000">
+      </div>
+
+      <div class="field">
+        <label for="mode">Come agisce il creditore?</label>
+        <select id="mode">
+          <option value="split">Ripartisce il residuo tra i soci</option>
+          <option value="single">Chiede tutto a un solo socio</option>
+        </select>
+        <p class="hint" id="modeHint"></p>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label">Soci e patrimonio personale</span>
+          <button id="addPartner" class="btn-ghost sm" type="button">+ Socio</button>
+        </div>
+        <div id="partnersEditor" class="partners-editor"></div>
+        <p class="hint">Il patrimonio personale è ciò che il socio possiede fuori dall'azienda: casa, risparmi, auto…</p>
+      </div>
+
+      <button id="reset" class="btn-ghost wide" type="button">Ripristina il caso iniziale</button>
+    </aside>
+
+    <!-- ============ RISULTATI ============ -->
+    <main class="results">
+
+      <p class="case"><strong>Caso</strong><span id="caseText"></span></p>
+
+      <div class="kpis">
+        <div class="kpi"><span>Debito</span><strong id="kDebt">—</strong></div>
+        <div class="kpi"><span>Paga la società</span><strong id="kCompany">—</strong></div>
+        <div class="kpi"><span>Pagano i soci</span><strong id="kPartners">—</strong></div>
+        <div class="kpi"><span>Perdita del creditore</span><strong id="kLost">—</strong></div>
+      </div>
+
+      <section class="card">
+        <h2>Da dove arrivano i soldi</h2>
+        <div class="stack" id="stack" role="img">
+          <div class="seg seg-company" id="segCompany"><span></span></div>
+          <div class="seg seg-partners" id="segPartners"><span></span></div>
+          <div class="seg seg-lost" id="segLost"><span></span></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot-company"></i>Patrimonio della società</span>
+          <span><i class="dot-partners"></i>Patrimonio personale dei soci</span>
+          <span><i class="dot-lost"></i>Non pagato: perdita del creditore</span>
+        </div>
+      </section>
+
+      <section class="verdict" id="verdict">
+        <p class="eyebrow" id="verdictTitle">Esito</p>
+        <p class="verdict-text" id="verdictText" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <h2>I soci, uno per uno</h2>
+        <div class="p-cards" id="partnerCards"></div>
+      </section>
+
+      <section class="card">
+        <details open>
+          <summary>Perché succede questo?</summary>
+          <div class="explain-body" id="explainBody"></div>
+        </details>
+      </section>
+
+      <section class="card no-print">
+        <details>
+          <summary>Tre esperimenti da provare in classe</summary>
+          <ol class="experiments">
+            <li><b>Confronta s.n.c. e s.r.l.</b> con lo stesso debito di 250.000 €: chi perde il proprio patrimonio? Chi resta scoperto?</li>
+            <li>Nella <b>s.a.s.</b> azzera il patrimonio degli accomandatari: chi paga? Gli accomandanti possono essere chiamati a rispondere?</li>
+            <li>Nella <b>s.n.c.</b> prova le due modalità del creditore: l'importo recuperato cambia? Cambia invece <em>chi</em> perde cosa?</li>
+          </ol>
+        </details>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    Simulazione didattica semplificata: non sostituisce il testo normativo. Nella realtà intervengono privilegi, procedure concorsuali e accordi tra soci.
+    Funziona offline in un unico file HTML, senza installazioni.
+  </footer>
+
+<script>
+(function () {
+  'use strict';
+
+  const eur = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+  const ROLES = {
+    illimitata:   { chip: 'illim.',    cls: 'chip-ill', label: 'Socio illimitatamente responsabile' },
+    accomandante: { chip: 'accomand.', cls: 'chip-acc', label: 'Socio accomandante' },
+    limitata:     { chip: 'limitata',  cls: 'chip-lim', label: 'Socio a responsabilità limitata' }
+  };
+
+  const TYPES = {
+    ss: {
+      label: 'Società semplice (s.s.)',
+      family: 'Società di persone',
+      regime: 'responsabilità illimitata e solidale',
+      company: 'Azienda agricola Verdi s.s.',
+      creditor: 'ai fornitori di mangimi',
+      defaultNewRole: 'illimitata',
+      partners: [
+        { name: 'Giulia', role: 'illimitata', wealth: 40000 },
+        { name: 'Paolo',  role: 'illimitata', wealth: 18000 }
+      ],
+      note: `Nella società semplice tutti i soci rispondono illimitatamente e solidalmente delle obbligazioni sociali: se il patrimonio della società non basta, il creditore può aggredire il patrimonio personale dei soci.
+
+È la forma più antica e più semplice, usata soprattutto per le attività agricole: non richiede un capitale sociale minimo.`
+    },
+
+    snc: {
+      label: 'Società in nome collettivo (s.n.c.)',
+      family: 'Società di persone',
+      regime: 'responsabilità illimitata e solidale',
+      company: 'Ristorante Da Nonna Rosa s.n.c.',
+      creditor: 'ai fornitori',
+      defaultNewRole: 'illimitata',
+      partners: [
+        { name: 'Giulia', role: 'illimitata', wealth: 38000 },
+        { name: 'Marco',  role: 'illimitata', wealth: 14000 },
+        { name: 'Anna',   role: 'illimitata', wealth: 62000 }
+      ],
+      note: `Nella società in nome collettivo tutti i soci sono illimitatamente e solidalmente responsabili: il creditore che non viene soddisfatto dal patrimonio sociale può chiedere l'intero residuo a uno qualsiasi dei soci. Il socio che paga può poi rivalersi sugli altri, secondo i rapporti interni.
+
+Di regola il creditore deve prima tentare di soddisfarsi sul patrimonio della società (beneficio di preventiva escussione): per questo la simulazione parte sempre dalla società. Non è previsto un capitale sociale minimo.`
+    },
+
+    sas: {
+      label: 'Società in accomandita semplice (s.a.s.)',
+      family: 'Società di persone',
+      regime: 'responsabilità mista',
+      company: 'Catering Bianchi s.a.s.',
+      creditor: 'ai fornitori',
+      defaultNewRole: 'accomandante',
+      partners: [
+        { name: 'Marco', role: 'illimitata',   wealth: 55000 },
+        { name: 'Elena', role: 'illimitata',   wealth: 12000 },
+        { name: 'Luca',  role: 'accomandante', wealth: 80000 },
+        { name: 'Sara',  role: 'accomandante', wealth: 30000 }
+      ],
+      note: `Nella società in accomandita semplice convivono due categorie di soci. Gli accomandatari amministrano la società e rispondono illimitatamente e solidalmente. Gli accomandanti non amministrano e rischiano solo il capitale conferito.
+
+Se un accomandante compie atti di gestione, però, può perdere questo beneficio e rispondere illimitatamente come gli accomandatari.`
+    },
+    srl: {
+      label: 'Società a responsabilità limitata (s.r.l.)',
+      family: 'Società di capitali',
+      regime: 'responsabilità limitata',
+      company: 'Hotel Mirafiori s.r.l.',
+      creditor: 'alla banca',
+      defaultNewRole: 'limitata',
+      partners: [
+        { name: 'Chiara', role: 'limitata', wealth: 90000 },
+        { name: 'Davide', role: 'limitata', wealth: 45000 },
+        { name: 'Franco', role: 'limitata', wealth: 150000 }
+      ],
+      note: `Nella società a responsabilità limitata i soci rispondono solo per il capitale conferito: il patrimonio personale resta separato da quello della società.
+
+Se la società non riesce a pagare, il creditore non può aggredire i beni dei soci: la società è insolvente e il creditore resta in parte non soddisfatto. Le quote sono trasferibili secondo le regole previste dallo statuto.`
+    },
+
+    spa: {
+      label: 'Società per azioni (s.p.a.)',
+      family: 'Società di capitali',
+      regime: 'responsabilità limitata',
+      company: 'Grand Hotel Riviera s.p.a.',
+      creditor: 'alla banca',
+      defaultNewRole: 'limitata',
+      partners: [
+        { name: 'Aurora', role: 'limitata', wealth: 120000 },
+        { name: 'Bruno',  role: 'limitata', wealth: 250000 },
+        { name: 'Carla',  role: 'limitata', wealth: 80000 },
+        { name: 'Dario',  role: 'limitata', wealth: 40000 }
+      ],
+      note: `Nella società per azioni il capitale è diviso in azioni e i soci rispondono limitatamente al capitale conferito. È la forma pensata per raccogliere grandi capitali: le azioni possono essere vendute e l'ingresso di nuovi soci non richiede il consenso degli altri.
+
+Il patrimonio personale degli azionisti è separato da quello della società: anche un debito enorme non intacca i loro beni personali.`
+    },
+
+    coop: {
+      label: 'Società cooperativa',
+      family: 'Società cooperativa',
+      regime: 'responsabilità limitata (se previsto dallo statuto)',
+      company: 'Coop. Albergo Diffuso s.c.',
+      creditor: 'ai fornitori',
+      defaultNewRole: 'limitata',
+      partners: [
+        { name: 'Elisa', role: 'limitata', wealth: 25000 },
+        { name: 'Fabio', role: 'limitata', wealth: 12000 },
+        { name: 'Giorgia', role: 'limitata', wealth: 38000 },
+        { name: 'Ivan', role: 'limitata', wealth: 9000 }
+      ],
+      note: `Nella cooperativa lo scopo è mutualistico: i soci sono anche utenti, lavoratori o fornitori della cooperativa, che opera per offrire loro un vantaggio (un servizio, un lavoro, un prezzo migliore).
+
+Se lo statuto prevede la responsabilità limitata, i soci rischiano solo il capitale conferito. Esistono anche cooperative con responsabilità illimitata, ma sono meno frequenti.`
+    }
+  };
+
+  const state = {
+    typeId: 'snc',
+    debt: 80000,
+    assets: 30000,
+    mode: 'split',
+    partners: []
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function chipText(role) { return ROLES[role].chip; }
+  function chipClass(role) { return ROLES[role].cls; }
+  function roleLabel(role) { return ROLES[role].label; }
+
+  function liabilityKind(partners) {
+    const unlimited = partners.some((p) => p.role === 'illimitata');
+    const limited = partners.some((p) => p.role !== 'illimitata');
+    if (unlimited && limited) return 'mixed';
+    return unlimited ? 'unlimited' : 'limited';
+  }
+
+  /* ---------- Calcolo di chi paga ---------- */
+  function compute() {
+    const debt = state.debt;
+    const assets = state.assets;
+    const byCompany = Math.min(debt, assets);
+    let remaining = debt - byCompany;
+
+    const partners = state.partners.map((p) => ({ ...p, paid: 0, left: p.wealth }));
+    const unlimited = partners.filter((p) => p.role === 'illimitata');
+
+    if (remaining > 0 && unlimited.length > 0) {
+      if (state.mode === 'single') {
+        // Solidarietà: il creditore si rivala sul socio più "capiente", poi sugli altri.
+        const order = unlimited.slice().sort((a, b) => b.wealth - a.wealth);
+        for (const p of order) {
+          if (remaining <= 0) break;
+          const pay = Math.min(p.left, remaining);
+          p.paid += pay;
+          p.left -= pay;
+          remaining -= pay;
+        }
+      } else {
+        // Ripartizione proporzionale al patrimonio, con "traboccamento" su chi può ancora pagare.
+        let guard = 0;
+        while (remaining > 0 && guard++ < 100) {
+          const pool = unlimited.filter((p) => p.left > 0);
+          if (pool.length === 0) break;
+          const total = pool.reduce((sum, p) => sum + p.left, 0);
+          let moved = 0;
+          for (const p of pool) {
+            const target = remaining * (p.left / total);
+            const pay = Math.min(p.left, target);
+            p.paid += pay;
+            p.left -= pay;
+            moved += pay;
+          }
+          remaining -= moved;
+          if (moved <= 0) break;
+        }
+      }
+    }
+
+    // Arrotonda ai singoli euro e mantiene i conti coerenti.
+    partners.forEach((p) => {
+      p.paid = Math.round(p.paid);
+      p.left = p.wealth - p.paid;
+    });
+    let byPartners = partners.reduce((sum, p) => sum + p.paid, 0);
+    const maxByPartners = debt - byCompany;
+    if (byPartners > maxByPartners) {
+      let excess = byPartners - maxByPartners;
+      for (let i = partners.length - 1; i >= 0 && excess > 0; i--) {
+        const cut = Math.min(partners[i].paid, excess);
+        partners[i].paid -= cut;
+        partners[i].left = partners[i].wealth - partners[i].paid;
+        excess -= cut;
+      }
+      byPartners = maxByPartners;
+    }
+
+    const uncovered = Math.max(0, debt - byCompany - byPartners);
+    return { debt, assets, byCompany, byPartners, uncovered, partners };
+  }
+
+  /* ---------- Aggiornamento dell'interfaccia ---------- */
+  function renderCase() {
+    const t = TYPES[state.typeId];
+    $('caseText').textContent =
+      `${t.company} deve ${eur.format(state.debt)} a ${t.creditor} e può contare su un patrimonio di ${eur.format(state.assets)}.`;
+  }
+
+  function renderKpis(r) {
+    $('kDebt').textContent = eur.format(r.debt);
+    $('kCompany').textContent = eur.format(r.byCompany);
+    $('kPartners').textContent = eur.format(r.byPartners);
+    const lost = $('kLost');
+    lost.textContent = eur.format(r.uncovered);
+    lost.classList.toggle('danger', r.uncovered > 0);
+  }
+
+  function setSegment(el, amount, debt) {
+    const pct = debt > 0 ? (amount / debt) * 100 : 0;
+    el.style.width = pct + '%';
+    el.classList.toggle('is-empty', amount <= 0);
+    const label = el.querySelector('span');
+    label.textContent = pct >= 14 ? eur.format(amount) : '';
+    el.title = `${eur.format(amount)} (${Math.round(pct)}%)`;
+  }
+
+  function renderStack(r) {
+    setSegment($('segCompany'), r.byCompany, r.debt);
+    setSegment($('segPartners'), r.byPartners, r.debt);
+    setSegment($('segLost'), r.uncovered, r.debt);
+    $('stack').setAttribute('aria-label',
+      `Debito di ${eur.format(r.debt)}: ${eur.format(r.byCompany)} pagati dalla società, ` +
+      `${eur.format(r.byPartners)} dai soci, ${eur.format(r.uncovered)} non pagati.`);
+  }
+
+  function renderVerdict(r) {
+    const kind = liabilityKind(state.partners);
+    const box = $('verdict');
+    box.classList.remove('is-unlimited', 'is-limited', 'is-mixed');
+    box.classList.add('is-' + kind);
+
+    const titleEl = $('verdictTitle');
+    const textEl = $('verdictText');
+    const recovered = r.debt - r.uncovered;
+    const pctRec = r.debt > 0 ? Math.round((recovered / r.debt) * 100) : 100;
+
+    if (kind === 'limited') {
+      titleEl.textContent = 'Responsabilità limitata';
+      textEl.textContent = r.uncovered > 0
+        ? `Il creditore recupera ${eur.format(recovered)} su ${eur.format(r.debt)} (${pctRec}%) e perde ${eur.format(r.uncovered)}. I soci non rispondono con il patrimonio personale: rischiano solo il capitale conferito nella società.`
+        : `Il creditore recupera tutto grazie al patrimonio della società. E se il debito fosse più alto? Il patrimonio personale dei soci resterebbe comunque intoccato: la responsabilità è limitata al capitale conferito.`;
+      return;
+    }
+
+    if (kind === 'unlimited') {
+      titleEl.textContent = 'Responsabilità illimitata e solidale';
+      if (r.byPartners > 0 && r.uncovered > 0) {
+        textEl.textContent = `La società paga ${eur.format(r.byCompany)}; i soci mettono di tasca propria ${eur.format(r.byPartners)}. Restano ${eur.format(r.uncovered)} non pagati: i soci hanno esaurito il patrimonio personale e il creditore resta scoperto.`;
+      } else if (r.byPartners > 0) {
+        textEl.textContent = `La società paga ${eur.format(r.byCompany)}; il resto — ${eur.format(r.byPartners)} — arriva dal patrimonio personale dei soci. Il creditore recupera tutto, ma qualcuno ha dovuto pagare di tasca propria.`;
+      } else if (r.uncovered > 0) {
+        textEl.textContent = `Il patrimonio della società è insufficiente e i soci non hanno patrimonio personale da aggredire: il creditore perde ${eur.format(r.uncovered)}.`;
+      } else {
+        textEl.textContent = `Qui basta il patrimonio della società e i soci non pagano nulla. Ma la responsabilità è illimitata: se il debito salisse, il creditore potrebbe aggredire il loro patrimonio personale. Prova ad alzare lo slider del debito.`;
+      }
+      return;
+    }
+
+    titleEl.textContent = 'Responsabilità mista';
+    const unlimitedPartners = r.partners.filter((p) => p.role === 'illimitata');
+    const paidByUnlimited = unlimitedPartners.reduce((sum, p) => sum + p.paid, 0);
+    if (paidByUnlimited > 0) {
+      textEl.textContent = `Gli accomandatari hanno pagato ${eur.format(paidByUnlimited)} di tasca propria; gli accomandanti restano protetti perché rischiano solo il capitale conferito.` +
+        (r.uncovered > 0 ? ` Restano ${eur.format(r.uncovered)} non pagati.` : ' Il creditore recupera tutto.');
+    } else if (r.uncovered > 0) {
+      textEl.textContent = `Il creditore perde ${eur.format(r.uncovered)}: gli accomandatari non hanno patrimonio capiente e gli accomandanti non possono essere aggrediti.`;
+    } else {
+      textEl.textContent = `Oggi paga tutto la società. Se il debito salisse, però, il creditore potrebbe rivalersi sugli accomandatari (responsabilità illimitata) ma non sugli accomandanti, che rischiano solo il capitale conferito.`;
+    }
+  }
+
+  function renderCards(r) {
+    r.partners.forEach((p, i) => {
+      const ref = cardRefs[i];
+      if (!ref) return;
+      ref.wealth.textContent = eur.format(p.wealth);
+      ref.paid.textContent = p.paid > 0 ? '− ' + eur.format(p.paid) : '0 €';
+      ref.left.textContent = eur.format(p.left);
+      const pct = p.wealth > 0 ? (p.left / p.wealth) * 100 : 0;
+      ref.fill.style.width = pct + '%';
+      ref.fill.classList.toggle('spent', p.paid > 0);
+      ref.card.classList.toggle('is-hit', p.paid > 0);
+      ref.card.classList.toggle('is-wiped', p.wealth > 0 && p.left === 0);
+
+      if (p.role === 'illimitata') {
+        ref.note.textContent = p.paid > 0
+          ? (p.left === 0 ? 'Ha perso tutto il patrimonio personale.' : 'Il creditore ha aggredito il suo patrimonio personale.')
+          : 'Nessuna aggressione: la società ha coperto il debito.';
+      } else {
+        ref.note.textContent = 'Patrimonio personale protetto: rischia solo il capitale conferito.';
+      }
+    });
+  }
+
+  function renderMode() {
+    const hasUnlimited = state.partners.some((p) => p.role === 'illimitata');
+    const mode = $('mode');
+    mode.disabled = !hasUnlimited;
+    $('modeHint').textContent = hasUnlimited
+      ? 'Solidarietà: il creditore può chiedere il residuo anche a un solo socio.'
+      : 'Nessun socio illimitatamente responsabile: il patrimonio personale non può essere aggredito.';
+  }
+
+  function render() {
+    const r = compute();
+    const t = TYPES[state.typeId];
+    $('typeHint').textContent = `${t.family} · ${t.regime}.`;
+    $('debtOut').textContent = eur.format(state.debt);
+    $('assetsOut').textContent = eur.format(state.assets);
+    renderCase();
+    renderKpis(r);
+    renderStack(r);
+    renderVerdict(r);
+    renderCards(r);
+    renderMode();
+  }
+
+  let cardRefs = [];
+
+  function buildEditor() {
+    const box = $('partnersEditor');
+    box.innerHTML = '';
+    state.partners.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'p-row';
+      row.innerHTML = `
+        <div class="p-line">
+          <input class="p-name" type="text" maxlength="18" autocomplete="off">
+          <button class="p-del" type="button" title="Rimuovi socio">×</button>
+        </div>
+        <div class="p-line">
+          <span class="chip"></span>
+          <label class="money"><span>€</span><input class="p-money" type="number" min="0" max="2000000" step="1000" inputmode="numeric"></label>
+        </div>`;
+
+      const nameInput = row.querySelector('.p-name');
+      const moneyInput = row.querySelector('.p-money');
+      const chip = row.querySelector('.chip');
+      const del = row.querySelector('.p-del');
+
+      nameInput.value = p.name;
+      nameInput.setAttribute('aria-label', 'Nome del socio ' + (i + 1));
+      nameInput.addEventListener('input', () => {
+        p.name = nameInput.value.trim() || 'Socio';
+        const ref = cardRefs[i];
+        if (ref) ref.name.textContent = p.name;
+      });
+
+      moneyInput.value = p.wealth;
+      moneyInput.setAttribute('aria-label', 'Patrimonio personale di ' + p.name);
+      moneyInput.addEventListener('input', () => {
+        p.wealth = Math.max(0, Math.min(2000000, Number(moneyInput.value) || 0));
+        render();
+      });
+      moneyInput.addEventListener('change', () => { moneyInput.value = p.wealth; });
+
+      chip.textContent = chipText(p.role);
+      chip.className = 'chip ' + chipClass(p.role);
+      chip.title = roleLabel(p.role);
+
+      del.addEventListener('click', () => removePartner(i));
+      del.style.visibility = state.partners.length <= 1 ? 'hidden' : 'visible';
+      del.setAttribute('aria-label', 'Rimuovi ' + p.name);
+
+      box.appendChild(row);
+    });
+    $('addPartner').disabled = state.partners.length >= 8;
+  }
+
+  function buildCards() {
+    const box = $('partnerCards');
+    box.innerHTML = '';
+    cardRefs = [];
+    state.partners.forEach((p) => {
+      const card = document.createElement('article');
+      card.className = 'p-card';
+      card.innerHTML = `
+        <div class="p-card-head">
+          <h3></h3><span class="chip"></span>
+        </div>
+        <div class="wbar"><i></i></div>
+        <dl>
+          <div><dt>Patrimonio personale</dt><dd class="wealth"></dd></div>
+          <div><dt>Paga ai creditori</dt><dd class="paid"></dd></div>
+          <div><dt>Patrimonio residuo</dt><dd class="left"></dd></div>
+        </dl>
+        <p class="p-note"></p>`;
+
+      const ref = {
+        card,
+        name: card.querySelector('h3'),
+        chip: card.querySelector('.chip'),
+        fill: card.querySelector('.wbar i'),
+        wealth: card.querySelector('.wealth'),
+        paid: card.querySelector('.paid'),
+        left: card.querySelector('.left'),
+        note: card.querySelector('.p-note')
+      };
+      ref.name.textContent = p.name;
+      ref.chip.textContent = roleLabel(p.role);
+      ref.chip.className = 'chip ' + chipClass(p.role);
+      cardRefs.push(ref);
+      box.appendChild(card);
+    });
+  }
+
+  function buildExplain() {
+    const t = TYPES[state.typeId];
+    const box = $('explainBody');
+    box.innerHTML = '';
+    t.note.split('\n\n').forEach((text) => {
+      const p = document.createElement('p');
+      p.textContent = text;
+      box.appendChild(p);
+    });
+    const fine = document.createElement('p');
+    fine.className = 'fine';
+    fine.textContent = 'Il creditore aggredisce prima il patrimonio della società e solo dopo quello dei soci illimitatamente responsabili. La simulazione ripartisce il residuo in proporzione al patrimonio personale: nella realtà il creditore può chiedere l\'intero importo a un solo socio (solidarietà) e sarà poi quel socio a rivalersi sugli altri.';
+    box.appendChild(fine);
+  }
+
+  function addPartner() {
+    if (state.partners.length >= 8) return;
+    state.partners.push({ name: 'Nuovo socio', role: TYPES[state.typeId].defaultNewRole, wealth: 15000 });
+    buildEditor();
+    buildCards();
+    render();
+  }
+
+  function removePartner(index) {
+    if (state.partners.length <= 1) return;
+    state.partners.splice(index, 1);
+    buildEditor();
+    buildCards();
+    render();
+  }
+
+  function loadPreset(id) {
+    state.typeId = id;
+    state.partners = TYPES[id].partners.map((p) => ({ ...p }));
+    buildEditor();
+    buildCards();
+    buildExplain();
+    render();
+  }
+
+  function resetAll() {
+    state.debt = 80000;
+    state.assets = 30000;
+    state.mode = 'split';
+    $('debt').value = state.debt;
+    $('assets').value = state.assets;
+    $('mode').value = state.mode;
+    loadPreset(state.typeId);
+  }
+
+  function init() {
+    const typeSelect = $('type');
+    Object.keys(TYPES).forEach((id) => {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = TYPES[id].label;
+      typeSelect.appendChild(option);
+    });
+    typeSelect.value = state.typeId;
+
+    $('debt').value = state.debt;
+    $('assets').value = state.assets;
+    $('mode').value = state.mode;
+
+    typeSelect.addEventListener('change', () => loadPreset(typeSelect.value));
+    $('debt').addEventListener('input', (e) => { state.debt = Number(e.target.value); render(); });
+    $('assets').addEventListener('input', (e) => { state.assets = Number(e.target.value); render(); });
+    $('mode').addEventListener('change', (e) => { state.mode = e.target.value; render(); });
+    $('addPartner').addEventListener('click', addPartner);
+    $('reset').addEventListener('click', resetAll);
+    $('print').addEventListener('click', () => window.print());
+
+    loadPreset(state.typeId);
+  }
+
+  init();
+})();
+</script>
+</div>
+</body>
+</html>
